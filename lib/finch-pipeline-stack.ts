@@ -12,7 +12,7 @@ export class FinchPipelineStack extends cdk.Stack {
     super(scope, id, props);
     applyTerminationProtectionOnStacks([this]);
 
-    const source = CodePipelineSource.gitHub('pendo324/infrastructure', 'main', {
+    const source = CodePipelineSource.gitHub('pendo324/infrastructure', 'linux-runners', {
       authentication: cdk.SecretValue.secretsManager('pipeline-github-access-token')
     });
 
