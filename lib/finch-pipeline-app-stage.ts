@@ -9,7 +9,6 @@ import { ASGRunnerStack } from './asg-runner-stack';
 import { ContinuousIntegrationStack } from './continuous-integration-stack';
 import { ECRRepositoryStack } from './ecr-repo-stack';
 import { EventBridgeScanNotifsStack } from './event-bridge-scan-notifs-stack';
-import { PVREReportingStack } from './pvre-reporting-stack';
 
 export enum ENVIRONMENT_STAGE {
   Beta,
@@ -73,6 +72,6 @@ export class FinchPipelineAppStage extends cdk.Stage {
       });
     }
 
-    new PVREReportingStack(this, 'PVREReportingStack', { terminationProtection: true });
+    // new PVREReportingStack(this, 'PVREReportingStack', { terminationProtection: true });
   }
 }
