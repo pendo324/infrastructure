@@ -205,11 +205,6 @@ export class ASGRunnerStack extends cdk.Stack {
         tenancy: 'host',
         hostResourceGroupArn: resourceGroup.attrArn
       },
-      licenseSpecifications: [
-        {
-          licenseConfigurationArn: props.licenseArn
-        }
-      ],
       tagSpecifications: [
         {
           resourceType: 'instance',
