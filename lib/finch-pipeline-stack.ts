@@ -4,15 +4,15 @@ import { CodePipeline, CodePipelineSource, ShellStep } from 'aws-cdk-lib/pipelin
 import { Construct } from 'constructs';
 import { EnvConfig } from '../config/env-config';
 import { RunnerConfig } from '../config/runner-config';
-import { ENVIRONMENT_STAGE, FinchPipelineAppStage } from './finch-pipeline-app-stage';
 import { applyTerminationProtectionOnStacks } from './aspects/stack-termination-protection';
+import { ENVIRONMENT_STAGE, FinchPipelineAppStage } from './finch-pipeline-app-stage';
 
 export class FinchPipelineStack extends cdk.Stack {
   constructor(scope: Construct, id: string, props?: cdk.StackProps) {
     super(scope, id, props);
     applyTerminationProtectionOnStacks([this]);
 
-    const source = CodePipelineSource.gitHub('runfinch/infrastructure', 'main', {
+    const source = CodePipelineSource.gitHub('pendo324/infrastructure', 'main', {
       authentication: cdk.SecretValue.secretsManager('pipeline-github-access-token')
     });
 
@@ -56,26 +56,26 @@ export class FinchPipelineStack extends cdk.Stack {
       })
     );
     // Add stages to a wave to deploy them in parallel.
-    const wave = pipeline.addWave('wave');
+    // const wave = pipeline.addWave('wave');
 
-    const prodApp = new FinchPipelineAppStage(this, 'Production', {
-      environmentStage: ENVIRONMENT_STAGE.Prod,
-      env: {
-        account: EnvConfig.envProd.account,
-        region: EnvConfig.envProd.region
-      },
-      runnerConfig: RunnerConfig.runnerProd
-    });
-    wave.addStage(prodApp);
+    // const prodApp = new FinchPipelineAppStage(this, 'Production', {
+    //   environmentStage: ENVIRONMENT_STAGE.Prod,
+    //   env: {
+    //     account: EnvConfig.envProd.account,
+    //     region: EnvConfig.envProd.region
+    //   },
+    //   runnerConfig: RunnerConfig.runnerProd
+    // });
+    // wave.addStage(prodApp);
 
-    const releaseApp = new FinchPipelineAppStage(this, 'Release', {
-      environmentStage: ENVIRONMENT_STAGE.Release,
-      env: {
-        account: EnvConfig.envRelease.account,
-        region: EnvConfig.envRelease.region
-      },
-      runnerConfig: RunnerConfig.runnerRelease
-    });
-    wave.addStage(releaseApp);
+    // const releaseApp = new FinchPipelineAppStage(this, 'Release', {
+    //   environmentStage: ENVIRONMENT_STAGE.Release,
+    //   env: {
+    //     account: EnvConfig.envRelease.account,
+    //     region: EnvConfig.envRelease.region
+    //   },
+    //   runnerConfig: RunnerConfig.runnerRelease
+    // });
+    // wave.addStage(releaseApp);
   }
 }

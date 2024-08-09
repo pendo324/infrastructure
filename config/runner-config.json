@@ -4,34 +4,26 @@
     "windowsLicenseArn": "arn:aws:license-manager:us-west-2:820462304213:license-configuration:lic-56c55a611976d66a1357e58077b19e93",
     "runnerTypes": [
       {
-        "platform": "mac",
-        "version": "13.6",
-        "arch": "arm",
-        "repo": "finch",
-        "desiredInstances": 1,
-        "availabilityZones": ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
-      },
-      {
-        "platform": "mac",
-        "version": "13.6",
-        "arch": "x86",
-        "repo": "finch-core",
-        "desiredInstances": 1,
-        "availabilityZones": ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
-      },
-      {
-        "platform": "windows",
-        "version": "2022",
+        "platform": "amazonlinux",
+        "version": "2023",
         "arch": "x86",
         "repo": "finch",
         "desiredInstances": 1,
         "availabilityZones": ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
       },
       {
-        "platform": "windows",
-        "version": "2022",
+        "platform": "amazonlinux",
+        "version": "2",
         "arch": "x86",
-        "repo": "finch-core",
+        "repo": "finch",
+        "desiredInstances": 1,
+        "availabilityZones": ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
+      },
+      {
+        "platform": "fedora",
+        "version": "40",
+        "arch": "x86",
+        "repo": "finch",
         "desiredInstances": 1,
         "availabilityZones": ["us-west-2a", "us-west-2b", "us-west-2c", "us-west-2d"]
       }
