@@ -44,7 +44,7 @@ export class FinchPipelineAppStage extends cdk.Stage {
         env: props.env,
         stage: props.environmentStage,
         type: runnerType,
-        ...(licenseArn != '' ? { licenseArn } : {})
+        ...(licenseArn !== '' ? { licenseArn } : {})
       });
     });
 

@@ -216,11 +216,9 @@ export class ASGRunnerStack extends cdk.Stack {
           ]
         }
       ],
-      ...(props.licenseArn !== ''
-        ? {
-            licenseSpecifications: [{ licenseConfigurationArn: props.licenseArn }]
-          }
-        : {})
+      ...(props.licenseArn && {
+        licenseSpecifications: [{ licenseConfigurationArn: props.licenseArn }]
+      })
     };
 
     const asg = new autoscaling.AutoScalingGroup(this, asgName, {
