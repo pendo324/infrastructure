@@ -93,8 +93,8 @@ export class ASGRunnerStack extends cdk.Stack {
           machineImage = ec2.MachineImage.genericLinux(
             // from https://fedoraproject.org/cloud/download#cloud_launch
             {
-              'us-east-2': arch === 'arm' ? 'ami-02f1e969ae0fdff65' : 'ami-004f552bba0e5f64f',
-              'us-east-1': arch === 'arm' ? 'ami-0d3825b70fa928886' : 'ami-097f74237291abc07'
+              'us-east-2': arch === 'arm' ? 'ami-02f1e969ae0fdff65' : 'ami-097f74237291abc07',
+              'us-east-1': arch === 'arm' ? 'ami-0d3825b70fa928886' : 'ami-004f552bba0e5f64f'
             }
           );
         }
