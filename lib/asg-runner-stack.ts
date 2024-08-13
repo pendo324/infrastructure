@@ -15,6 +15,7 @@ interface IASGRunnerStack {
   version: string;
   arch: string;
   repo: string;
+  asgName: string;
 }
 
 interface ASGRunnerStackProps extends cdk.StackProps {
@@ -45,6 +46,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
   version: string;
   arch: string;
   repo: string;
+  asgName: string;
 
   constructor(scope: Construct, id: string, props: ASGRunnerStackProps) {
     super(scope, id, props);
@@ -53,6 +55,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
     this.version = props.type.version;
     this.arch = props.type.arch;
     this.arch = props.type.repo;
+    this.asgName = '';
 
     applyTerminationProtectionOnStacks([this]);
 
@@ -61,7 +64,6 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
     let instanceType: ec2.InstanceType;
     let machineImage: ec2.IMachineImage;
     let userDataString = '';
-    let asgName = '';
     switch (this.platform) {
       case PlatformType.MAC: {
         if (this.arch === 'arm') {
@@ -80,12 +82,12 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
             'owner-alias': ['amazon']
           }
         });
-        asgName = 'MacASG';
+        this.asgName = 'MacASG';
         userDataString = userData(props, 'setup-runner.sh');
       }
       case PlatformType.WINDOWS: {
         instanceType = ec2.InstanceType.of(ec2.InstanceClass.M5ZN, ec2.InstanceSize.METAL);
-        asgName = 'WindowsASG';
+        this.asgName = 'WindowsASG';
         machineImage = ec2.MachineImage.latestWindows(ec2.WindowsVersion.WINDOWS_SERVER_2022_ENGLISH_FULL_BASE);
         // We need to provide user data as a yaml file to specify runAs: admin
         // Maintain that file as yaml and source here to ensure formatting.
@@ -104,7 +106,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
         } else {
           instanceType = ec2.InstanceType.of(ec2.InstanceClass.C7A, ec2.InstanceSize.LARGE);
         }
-        asgName = 'LinuxASG';
+        this.asgName = 'LinuxASG';
         userDataString = userData(props, 'setup-linux-runner.sh');
         if (this.platform === PlatformType.AMAZONLINUX) {
           if (this.version === '2') {
@@ -168,8 +170,8 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
       volume: ec2.BlockDeviceVolume.ebs(100)
     };
 
-    const ltName = `${asgName}LaunchTemplate`;
-    const keyPairName = `${asgName}KeyPair`;
+    const ltName = `${this.asgName}LaunchTemplate`;
+    const keyPairName = `${this.asgName}KeyPair`;
     const lt = new ec2.LaunchTemplate(this, ltName, {
       requireImdsv2: true,
       instanceType,
@@ -204,7 +206,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
       licenseSpecifications: [{ licenseConfigurationArn: props.licenseArn }]
     };
 
-    const asg = new autoscaling.AutoScalingGroup(this, asgName, {
+    const asg = new autoscaling.AutoScalingGroup(this, this.asgName, {
       vpc,
       desiredCapacity: props.type.desiredInstances,
       maxCapacity: props.type.desiredInstances,
@@ -287,21 +289,18 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
       return new resourcegroups.CfnGroup(this, resourceGroupName, {
         name: resourceGroupName,
         description: resourceGroupDescription,
-        configuration: [
-          {
-            type: 'AWS::ResourceGroups::Generic',
-            parameters: [
+        resourceQuery: {
+          type: 'TAG_FILTERS_1_0',
+          query: {
+            resourceTypeFilters: ['AWS::EC2::Instance'],
+            tagFilters: [
               {
-                name: 'allowed-resource-types',
-                values: ['AWS::EC2::Instance']
-              },
-              {
-                name: 'deletion-protection',
-                values: ['UNLESS_EMPTY']
+                key: 'aws:autoscaling:groupName',
+                values: [this.asgName]
               }
             ]
           }
-        ]
+        }
       });
     }
   }
