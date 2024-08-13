@@ -25,15 +25,6 @@ interface ASGRunnerStackProps extends cdk.StackProps {
   type: RunnerType;
 }
 
-const requiresDedicatedHosts = (platform: string) => platform === PlatformType.MAC || platform === PlatformType.WINDOWS;
-
-const userData = (props: ASGRunnerStackProps, setupScriptName: string) =>
-  `#!/bin/bash
-LABEL_STAGE=${props.stage === ENVIRONMENT_STAGE.Release ? 'release' : 'test'}
-REPO=${props.type.repo}
-REGION=${props.env?.region}
-` + readFileSync(`./scripts/${setupScriptName}`, 'utf8');
-
 /**
  * A stack to provision an autoscaling group for macOS instances. This requires:
  *  - a self-managed license (manually created as cdk/cfn does not support this)
@@ -47,6 +38,15 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
   arch: string;
   repo: string;
   asgName: string;
+
+  requiresDedicatedHosts = () => this.platform === PlatformType.MAC || this.platform === PlatformType.WINDOWS;
+
+  userData = (props: ASGRunnerStackProps, setupScriptName: string) =>
+    `#!/bin/bash
+  LABEL_STAGE=${props.stage === ENVIRONMENT_STAGE.Release ? 'release' : 'test'}
+  REPO=${this.repo}
+  REGION=${props.env?.region}
+  ` + readFileSync(`./scripts/${setupScriptName}`, 'utf8');
 
   constructor(scope: Construct, id: string, props: ASGRunnerStackProps) {
     super(scope, id, props);
@@ -83,7 +83,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
           }
         });
         this.asgName = 'MacASG';
-        userDataString = userData(props, 'setup-runner.sh');
+        userDataString = this.userData(props, 'setup-runner.sh');
       }
       case PlatformType.WINDOWS: {
         instanceType = ec2.InstanceType.of(ec2.InstanceClass.M5ZN, ec2.InstanceSize.METAL);
@@ -107,7 +107,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
           instanceType = ec2.InstanceType.of(ec2.InstanceClass.C7A, ec2.InstanceSize.LARGE);
         }
         this.asgName = 'LinuxASG';
-        userDataString = userData(props, 'setup-linux-runner.sh');
+        userDataString = this.userData(props, 'setup-linux-runner.sh');
         if (this.platform === PlatformType.AMAZONLINUX) {
           if (this.version === '2') {
             machineImage = ec2.MachineImage.latestAmazonLinux2();
@@ -188,10 +188,12 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
     const cfnLt = lt.node.defaultChild as ec2.CfnLaunchTemplate;
     cfnLt.launchTemplateData = {
       ...cfnLt.launchTemplateData,
-      placement: {
-        tenancy: 'host',
-        hostResourceGroupArn: resourceGroup.attrArn
-      },
+      ...(this.requiresDedicatedHosts() && {
+        placement: {
+          tenancy: 'host',
+          hostResourceGroupArn: resourceGroup.attrArn
+        }
+      }),
       tagSpecifications: [
         {
           resourceType: 'instance',
@@ -246,7 +248,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
     const resourceGroupName = `${this.repo}-${this.platform}-${this.version.split('.')[0]}-${this.arch}HostGroup`;
     const resourceGroupDescription = 'Host resource group for finchs infrastructure';
 
-    if (requiresDedicatedHosts(this.platform)) {
+    if (this.requiresDedicatedHosts()) {
       return new resourcegroups.CfnGroup(this, resourceGroupName, {
         name: resourceGroupName,
         description: resourceGroupDescription,
