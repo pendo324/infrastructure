@@ -10,12 +10,21 @@ import { PlatformType, RunnerType } from '../config/runner-config';
 import { applyTerminationProtectionOnStacks } from './aspects/stack-termination-protection';
 import { ENVIRONMENT_STAGE } from './finch-pipeline-app-stage';
 
+interface IASGRunnerStack {
+  platform: PlatformType;
+  version: string;
+  arch: string;
+  repo: string;
+}
+
 interface ASGRunnerStackProps extends cdk.StackProps {
   env: cdk.Environment | undefined;
   stage: ENVIRONMENT_STAGE;
   licenseArn: string;
   type: RunnerType;
 }
+
+const requiresDedicatedHosts = (platform: string) => platform === PlatformType.MAC || platform === PlatformType.WINDOWS;
 
 const userData = (props: ASGRunnerStackProps, setupScriptName: string) =>
   `#!/bin/bash
@@ -31,30 +40,37 @@ REGION=${props.env?.region}
  *  - a launch template
  *  - an auto scaling group
  */
-export class ASGRunnerStack extends cdk.Stack {
+export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
+  platform: PlatformType;
+  version: string;
+  arch: string;
+  repo: string;
+
   constructor(scope: Construct, id: string, props: ASGRunnerStackProps) {
     super(scope, id, props);
+
+    this.platform = props.type.platform;
+    this.version = props.type.version;
+    this.arch = props.type.arch;
+    this.arch = props.type.repo;
+
     applyTerminationProtectionOnStacks([this]);
 
-    const platform = props.type.platform;
-    const version = props.type.version;
-    const arch = props.type.arch;
-
-    const amiSearchString = `amzn-ec2-macos-${version}*`;
+    const amiSearchString = `amzn-ec2-macos-${this.version}*`;
 
     let instanceType: ec2.InstanceType;
     let machineImage: ec2.IMachineImage;
     let userDataString = '';
     let asgName = '';
-    switch (platform) {
+    switch (this.platform) {
       case PlatformType.MAC: {
-        if (arch === 'arm') {
+        if (this.arch === 'arm') {
           instanceType = ec2.InstanceType.of(ec2.InstanceClass.MAC2, ec2.InstanceSize.METAL);
           // instanceType = 'mac2.metal';
         } else {
           instanceType = ec2.InstanceType.of(ec2.InstanceClass.MAC1, ec2.InstanceSize.METAL);
         }
-        const macOSArchLookup = arch === 'arm' ? `arm64_${platform}` : `x86_64_${platform}`;
+        const macOSArchLookup = this.arch === 'arm' ? `arm64_${this.platform}` : `x86_64_${this.platform}`;
         machineImage = new ec2.LookupMachineImage({
           name: amiSearchString,
           filters: {
@@ -83,15 +99,15 @@ export class ASGRunnerStack extends cdk.Stack {
         // Linux instances do not have to be metal, since the only mode of operation
         // for Finch on linux currently is "native" mode, e.g. no virutal machine on host
 
-        if (arch === 'arm') {
+        if (this.arch === 'arm') {
           instanceType = ec2.InstanceType.of(ec2.InstanceClass.C7G, ec2.InstanceSize.LARGE);
         } else {
           instanceType = ec2.InstanceType.of(ec2.InstanceClass.C7A, ec2.InstanceSize.LARGE);
         }
         asgName = 'LinuxASG';
         userDataString = userData(props, 'setup-linux-runner.sh');
-        if (platform === PlatformType.AMAZONLINUX) {
-          if (version === '2') {
+        if (this.platform === PlatformType.AMAZONLINUX) {
+          if (this.version === '2') {
             machineImage = ec2.MachineImage.latestAmazonLinux2();
           } else {
             machineImage = ec2.MachineImage.latestAmazonLinux2023();
@@ -100,8 +116,8 @@ export class ASGRunnerStack extends cdk.Stack {
           machineImage = ec2.MachineImage.genericLinux(
             // from https://fedoraproject.org/cloud/download#cloud_launch
             {
-              'us-east-2': arch === 'arm' ? 'ami-02f1e969ae0fdff65' : 'ami-097f74237291abc07',
-              'us-east-1': arch === 'arm' ? 'ami-0d3825b70fa928886' : 'ami-004f552bba0e5f64f'
+              'us-east-2': this.arch === 'arm' ? 'ami-02f1e969ae0fdff65' : 'ami-097f74237291abc07',
+              'us-east-1': this.arch === 'arm' ? 'ami-0d3825b70fa928886' : 'ami-004f552bba0e5f64f'
             }
           );
         }
@@ -144,45 +160,7 @@ export class ASGRunnerStack extends cdk.Stack {
       })
     );
 
-    // Create a custom name for this as names for resource groups cannot be repeated
-    const resourceGroupName = `${props.type.repo}-${platform}-${version.split('.')[0]}-${props.type.arch}HostGroup`;
-
-    const resourceGroup = new resourcegroups.CfnGroup(this, resourceGroupName, {
-      name: resourceGroupName,
-      description: 'Host resource group for finchs infrastructure',
-      configuration: [
-        {
-          type: 'AWS::EC2::HostManagement',
-          parameters: [
-            {
-              name: 'auto-allocate-host',
-              values: ['true']
-            },
-            {
-              name: 'auto-release-host',
-              values: ['true']
-            },
-            {
-              name: 'any-host-based-license-configuration',
-              values: ['true']
-            }
-          ]
-        },
-        {
-          type: 'AWS::ResourceGroups::Generic',
-          parameters: [
-            {
-              name: 'allowed-resource-types',
-              values: ['AWS::EC2::Host', 'AWS::EC2::Instance']
-            },
-            {
-              name: 'deletion-protection',
-              values: ['UNLESS_EMPTY']
-            }
-          ]
-        }
-      ]
-    });
+    const resourceGroup = this.createResourceGroup();
 
     // Create a 100GiB volume to be used as instance root volume
     const rootVolume: ec2.BlockDevice = {
@@ -257,6 +235,73 @@ export class ASGRunnerStack extends cdk.Stack {
         // 1 day from now
         startTime: new Date(new Date().getTime() + 1 * 24 * 60 * 60 * 1000).toISOString(),
         desiredCapacity: 0
+      });
+    }
+  }
+
+  createResourceGroup() {
+    // Create a custom name for this as names for resource groups cannot be repeated
+    const resourceGroupName = `${this.repo}-${this.platform}-${this.version.split('.')[0]}-${this.arch}HostGroup`;
+    const resourceGroupDescription = 'Host resource group for finchs infrastructure';
+
+    if (requiresDedicatedHosts(this.platform)) {
+      return new resourcegroups.CfnGroup(this, resourceGroupName, {
+        name: resourceGroupName,
+        description: resourceGroupDescription,
+        configuration: [
+          {
+            // This resource group is only used for management of dedicated hosts, as indicated by
+            // the "AWS::EC2::HostManagement" type
+            type: 'AWS::EC2::HostManagement',
+            parameters: [
+              {
+                name: 'auto-allocate-host',
+                values: ['true']
+              },
+              {
+                name: 'auto-release-host',
+                values: ['true']
+              },
+              {
+                name: 'any-host-based-license-configuration',
+                values: ['true']
+              }
+            ]
+          },
+          {
+            type: 'AWS::ResourceGroups::Generic',
+            parameters: [
+              {
+                name: 'allowed-resource-types',
+                values: ['AWS::EC2::Host']
+              },
+              {
+                name: 'deletion-protection',
+                values: ['UNLESS_EMPTY']
+              }
+            ]
+          }
+        ]
+      });
+    } else {
+      return new resourcegroups.CfnGroup(this, resourceGroupName, {
+        name: resourceGroupName,
+        description: resourceGroupDescription,
+        configuration: [
+          {
+            type: 'AWS::ResourceGroups::Generic',
+            parameters: [
+              {
+                name: 'allowed-resource-types',
+                values: ['AWS::EC2::Instance']
+              },
+              {
+                name: 'deletion-protection',
+                values: ['UNLESS_EMPTY']
+              }
+            ]
+          }
+        ]
       });
     }
   }
