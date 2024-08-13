@@ -20,7 +20,8 @@ if [ "${OS_NAME}" = "Amazon Linux" ]; then
         GH_RUNNER_DEPENDENCIES="openssl krb5-libs zlib"
         ADDITIONAL_PACKAGES="policycoreutils-python ${GH_RUNNER_DEPENDENCIES}"
     elif [ "${OS_VERSION}" = "2023" ]; then
-        ADDITIONAL_PACKAGES="policycoreutils-python-utils"
+        GH_RUNNER_DEPENDENCIES="lttng-ust openssl-libs krb5-libs zlib libicu"
+        ADDITIONAL_PACKAGES="policycoreutils-python-utils ${GH_RUNNER_DEPENDENCIES}"
     fi
 elif [ "${OS_NAME}" = "Fedora Linux" ]; then
     DISTRO="fedora"
