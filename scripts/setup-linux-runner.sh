@@ -3,7 +3,7 @@
 # The user data script is run as root so do not use sudo command
 
 # Log output
-exec &>/home/ec2-user/setup-runner.log
+exec &>/var/log/setup-runner.log
 echo $0
 
 # load all variables from /etc/os-release prefixed with OS_RELEASE as to not clobber
@@ -61,6 +61,7 @@ GH_RUNNER_DOWNLOAD_URL="https://github.com/actions/runner/releases/download/v2.3
 curl -OL "${GO_DOWNLOAD_URL}"
 echo "${GO_DOWNLOAD_HASH}  ${GO_FILENAME}" | sha256sum -c
 rm -rf /usr/local/go && tar -C /usr/local -xzf "./${GO_FILENAME}"
+echo "export PATH=$PATH:/usr/local/go/bin" > /etc/profile.d/go.sh
 rm "${GO_FILENAME}"
 
 curl -OL "${GH_RUNNER_DOWNLOAD_URL}"
