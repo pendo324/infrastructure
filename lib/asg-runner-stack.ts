@@ -54,7 +54,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
     this.platform = props.type.platform;
     this.version = props.type.version;
     this.arch = props.type.arch;
-    this.arch = props.type.repo;
+    this.repo = props.type.repo;
     this.asgName = '';
 
     applyTerminationProtectionOnStacks([this]);
