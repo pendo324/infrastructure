@@ -42,16 +42,17 @@ export class ASGRunnerStack extends cdk.Stack {
 
     const amiSearchString = `amzn-ec2-macos-${version}*`;
 
-    let instanceType = '';
+    let instanceType: ec2.InstanceType;
     let machineImage: ec2.IMachineImage;
     let userDataString = '';
     let asgName = '';
     switch (platform) {
       case PlatformType.MAC: {
         if (arch === 'arm') {
-          instanceType = 'mac2.metal';
+          instanceType = ec2.InstanceType.of(ec2.InstanceClass.MAC2, ec2.InstanceSize.METAL);
+          // instanceType = 'mac2.metal';
         } else {
-          instanceType = 'mac1.metal';
+          instanceType = ec2.InstanceType.of(ec2.InstanceClass.MAC1, ec2.InstanceSize.METAL);
         }
         const macOSArchLookup = arch === 'arm' ? `arm64_${platform}` : `x86_64_${platform}`;
         machineImage = new ec2.LookupMachineImage({
@@ -67,7 +68,7 @@ export class ASGRunnerStack extends cdk.Stack {
         userDataString = userData(props, 'setup-runner.sh');
       }
       case PlatformType.WINDOWS: {
-        instanceType = 'm5zn.metal';
+        instanceType = ec2.InstanceType.of(ec2.InstanceClass.M5ZN, ec2.InstanceSize.METAL);
         asgName = 'WindowsASG';
         machineImage = ec2.MachineImage.latestWindows(ec2.WindowsVersion.WINDOWS_SERVER_2022_ENGLISH_FULL_BASE);
         // We need to provide user data as a yaml file to specify runAs: admin
@@ -81,7 +82,12 @@ export class ASGRunnerStack extends cdk.Stack {
       case PlatformType.FEDORA: {
         // Linux instances do not have to be metal, since the only mode of operation
         // for Finch on linux currently is "native" mode, e.g. no virutal machine on host
-        instanceType = arch === 'arm' ? 'c7g.large' : 'c7a.large';
+
+        if (arch === 'arm') {
+          instanceType = ec2.InstanceType.of(ec2.InstanceClass.C7G, ec2.InstanceSize.LARGE);
+        } else {
+          instanceType = ec2.InstanceType.of(ec2.InstanceClass.C7A, ec2.InstanceSize.LARGE);
+        }
         asgName = 'LinuxASG';
         userDataString = userData(props, 'setup-linux-runner.sh');
         if (platform === PlatformType.AMAZONLINUX) {
@@ -188,7 +194,7 @@ export class ASGRunnerStack extends cdk.Stack {
     const keyPairName = `${asgName}KeyPair`;
     const lt = new ec2.LaunchTemplate(this, ltName, {
       requireImdsv2: true,
-      instanceType: new ec2.InstanceType(instanceType),
+      instanceType,
       keyPair: ec2.KeyPair.fromKeyPairName(this, keyPairName, 'runner-key'),
       machineImage,
       role: role,
