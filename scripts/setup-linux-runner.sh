@@ -69,6 +69,11 @@ tar -C "${RUNNER_DIR}" -xzf "./${GH_RUNNER_FILENAME}"
 chown -R "${USERNAME}:${USERNAME}" "${RUNNER_DIR}"
 rm "${GH_RUNNER_FILENAME}"
 
+# Install SSM Agent on non-AL hosts
+if [ "${DISTRO}" = "fedora" ]; then
+    yum install -y "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_${GO_ARCH}/amazon-ssm-agent.rpm"
+fi
+
 # Get GH API key and fetch a runner registration token
 GH_KEY=$(aws secretsmanager get-secret-value --secret-id $REPO-runner-reg-key --region $REGION | jq '.SecretString' -r)
 RUNNER_REG_TOKEN=$(curl -L -s \
