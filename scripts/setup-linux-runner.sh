@@ -12,7 +12,7 @@ source <(sed -Ee "s/^([^#])/${OS_RELEASE_PREFIX}_\1/" "/etc/os-release")
 
 # set variables to make accessing values in /etc/os-release easier
 eval "OS_NAME=\"\${${OS_RELEASE_PREFIX}_NAME}\""
-eval "OS_VERSION=\"\${${OS_RELEASE_PREFIX}_VERSION}\""
+eval "OS_VERSION=\"\${${OS_RELEASE_PREFIX}_VERSION_ID}\""
 
 if [ "${OS_NAME}" = "Amazon Linux" ]; then
     USERNAME="ec2-user"
