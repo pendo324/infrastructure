@@ -85,7 +85,8 @@ RUNNER_REG_TOKEN=$(curl -L -s \
     "https://api.github.com/repos/pendo324/${REPO}/actions/runners/registration-token" | jq -r '.token')
 
 
-if [ ! -z ${GH_RUNNER_DEPENDENCIES+x} ]; then
+if [ -z ${GH_RUNNER_DEPENDENCIES+x} ]; then
+    echo "Executing installdependencies.sh because GH_RUNNER_DEPENDENCIES is not defined."
     "${RUNNER_DIR}/bin/installdependencies.sh"
 fi
 
