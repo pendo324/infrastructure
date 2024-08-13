@@ -16,6 +16,7 @@ eval "OS_VERSION=\"\${${OS_RELEASE_PREFIX}_VERSION_ID}\""
 
 if [ "${OS_NAME}" = "Amazon Linux" ]; then
     USERNAME="ec2-user"
+    DISTRO="amazonlinux"
     if [ "${OS_VERSION}" = "2" ]; then
         GH_RUNNER_DEPENDENCIES="openssl krb5-libs zlib"
         ADDITIONAL_PACKAGES="policycoreutils-python ${GH_RUNNER_DEPENDENCIES}"
