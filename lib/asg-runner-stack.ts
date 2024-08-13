@@ -173,7 +173,7 @@ export class ASGRunnerStack extends cdk.Stack {
           parameters: [
             {
               name: 'allowed-resource-types',
-              values: ['AWS::EC2::Host']
+              values: ['AWS::EC2::Host', 'AWS::EC2::Instance']
             },
             {
               name: 'deletion-protection',
