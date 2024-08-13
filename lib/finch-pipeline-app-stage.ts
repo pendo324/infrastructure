@@ -39,7 +39,8 @@ export class FinchPipelineAppStage extends cdk.Stage {
         case PlatformType.WINDOWS: {
           licenseArn = props.runnerConfig.windowsLicenseArn;
         }
-        case PlatformType.AMAZONLINUX, PlatformType.FEDORA: {
+        case PlatformType.AMAZONLINUX:
+        case PlatformType.FEDORA: {
           licenseArn = props.runnerConfig.linuxLicenseArn;
         }
       }
@@ -47,7 +48,7 @@ export class FinchPipelineAppStage extends cdk.Stage {
         env: props.env,
         stage: props.environmentStage,
         type: runnerType,
-        licenseArn,
+        licenseArn
       });
     });
 

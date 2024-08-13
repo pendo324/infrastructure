@@ -13,7 +13,7 @@ import { ENVIRONMENT_STAGE } from './finch-pipeline-app-stage';
 interface ASGRunnerStackProps extends cdk.StackProps {
   env: cdk.Environment | undefined;
   stage: ENVIRONMENT_STAGE;
-  licenseArn?: string;
+  licenseArn: string;
   type: RunnerType;
 }
 
@@ -77,7 +77,8 @@ export class ASGRunnerStack extends cdk.Stack {
           .replace('<REPO>', props.type.repo)
           .replace('<REGION>', props.env?.region || '');
       }
-      default: {
+      case PlatformType.AMAZONLINUX:
+      case PlatformType.FEDORA: {
         // Linux instances do not have to be metal, since the only mode of operation
         // for Finch on linux currently is "native" mode, e.g. no virutal machine on host
         instanceType = arch === 'arm' ? 'c7g.large' : 'c7a.large';
