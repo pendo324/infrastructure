@@ -3,6 +3,7 @@ import config from './runner-config.json';
 export interface RunnerProps {
   macLicenseArn: string;
   windowsLicenseArn: string;
+  linuxLicenseArn: string;
   runnerTypes: Array<RunnerType>;
 }
 
