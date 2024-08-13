@@ -192,7 +192,8 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
         placement: {
           tenancy: 'host',
           hostResourceGroupArn: resourceGroup.attrArn
-        }
+        },
+        licenseSpecifications: [{ licenseConfigurationArn: props.licenseArn }]
       }),
       tagSpecifications: [
         {
@@ -204,8 +205,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
             }
           ]
         }
-      ],
-      licenseSpecifications: [{ licenseConfigurationArn: props.licenseArn }]
+      ]
     };
 
     const asg = new autoscaling.AutoScalingGroup(this, this.asgName, {
