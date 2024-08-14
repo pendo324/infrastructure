@@ -25,7 +25,6 @@ export enum PlatformType {
   WINDOWS = 'windows',
   MAC = 'mac',
   AMAZONLINUX = 'amazonlinux',
-  FEDORA = 'fedora'
 }
 
 /**

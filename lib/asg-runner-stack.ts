@@ -21,7 +21,11 @@ interface IASGRunnerStack {
 interface ASGRunnerStackProps extends cdk.StackProps {
   env: cdk.Environment | undefined;
   stage: ENVIRONMENT_STAGE;
-  licenseArn: string;
+  /** Only required for dedicated hosts.
+   * Right now, dedicated hosts should only be used to avoid
+   * nested virtualization issues, which is only a problem for
+   * non-Linux usecases. */
+  licenseArn?: string;
   type: RunnerType;
 }
 
@@ -96,8 +100,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
           .replace('<REPO>', props.type.repo)
           .replace('<REGION>', props.env?.region || '');
       }
-      case PlatformType.AMAZONLINUX:
-      case PlatformType.FEDORA: {
+      case PlatformType.AMAZONLINUX: {
         // Linux instances do not have to be metal, since the only mode of operation
         // for Finch on linux currently is "native" mode, e.g. no virutal machine on host
 
@@ -108,20 +111,10 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
         }
         this.asgName = 'LinuxASG';
         userDataString = this.userData(props, 'setup-linux-runner.sh');
-        if (this.platform === PlatformType.AMAZONLINUX) {
-          if (this.version === '2') {
-            machineImage = ec2.MachineImage.latestAmazonLinux2();
-          } else {
-            machineImage = ec2.MachineImage.latestAmazonLinux2023();
-          }
+        if (this.version === '2') {
+          machineImage = ec2.MachineImage.latestAmazonLinux2();
         } else {
-          machineImage = ec2.MachineImage.genericLinux(
-            // from https://fedoraproject.org/cloud/download#cloud_launch
-            {
-              'us-east-2': this.arch === 'arm' ? 'ami-02f1e969ae0fdff65' : 'ami-097f74237291abc07',
-              'us-east-1': this.arch === 'arm' ? 'ami-0d3825b70fa928886' : 'ami-004f552bba0e5f64f'
-            }
-          );
+          machineImage = ec2.MachineImage.latestAmazonLinux2023();
         }
       }
     }

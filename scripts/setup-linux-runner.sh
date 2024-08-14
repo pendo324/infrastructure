@@ -31,9 +31,10 @@ RUNNER_DIR="${HOMEDIR}/ar"
 mkdir -p "${RUNNER_DIR}" && cd "${HOMEDIR}"
 
 # TODO: add check for non-Fedora based systems if needed
-sudo yum group install -y "Development Tools"
+yum upgrade
+yum group install -y "Development Tools"
 if [ ! -z "${ADDITIONAL_PACKAGES}" ]; then
-    sudo yum install -y ${ADDITIONAL_PACKAGES}
+    yum install -y ${ADDITIONAL_PACKAGES}
 fi
 
 # configure download parameters based on architecture

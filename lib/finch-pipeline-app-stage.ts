@@ -31,17 +31,13 @@ export class FinchPipelineAppStage extends cdk.Stage {
     super(scope, id, props);
     props.runnerConfig.runnerTypes.forEach((runnerType) => {
       const ASGStackName = `ASG-${runnerType.platform}-${runnerType.repo}-${runnerType.version.split('.')[0]}-${runnerType.arch}Stack`;
-      let licenseArn: string = '';
+      let licenseArn: string | undefined;
       switch (runnerType.platform) {
         case PlatformType.MAC: {
           licenseArn = props.runnerConfig.macLicenseArn;
         }
         case PlatformType.WINDOWS: {
           licenseArn = props.runnerConfig.windowsLicenseArn;
-        }
-        case PlatformType.AMAZONLINUX:
-        case PlatformType.FEDORA: {
-          licenseArn = props.runnerConfig.linuxLicenseArn;
         }
       }
       new ASGRunnerStack(this, ASGStackName, {
