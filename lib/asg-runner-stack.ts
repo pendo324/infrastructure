@@ -15,7 +15,6 @@ interface IASGRunnerStack {
   version: string;
   arch: string;
   repo: string;
-  asgName: string;
 }
 
 interface ASGRunnerStackProps extends cdk.StackProps {
@@ -41,7 +40,6 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
   version: string;
   arch: string;
   repo: string;
-  asgName: string;
 
   requiresDedicatedHosts = () => this.platform === PlatformType.MAC || this.platform === PlatformType.WINDOWS;
 
@@ -59,7 +57,6 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
     this.version = props.type.version;
     this.arch = props.type.arch;
     this.repo = props.type.repo;
-    this.asgName = '';
 
     applyTerminationProtectionOnStacks([this]);
 
@@ -68,6 +65,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
     let instanceType: ec2.InstanceType;
     let machineImage: ec2.IMachineImage;
     let userDataString = '';
+    let asgName = '';
     switch (this.platform) {
       case PlatformType.MAC: {
         if (this.arch === 'arm') {
@@ -86,12 +84,12 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
             'owner-alias': ['amazon']
           }
         });
-        this.asgName = 'MacASG';
+        asgName = 'MacASG';
         userDataString = this.userData(props, 'setup-runner.sh');
       }
       case PlatformType.WINDOWS: {
         instanceType = ec2.InstanceType.of(ec2.InstanceClass.M5ZN, ec2.InstanceSize.METAL);
-        this.asgName = 'WindowsASG';
+        asgName = 'WindowsASG';
         machineImage = ec2.MachineImage.latestWindows(ec2.WindowsVersion.WINDOWS_SERVER_2022_ENGLISH_FULL_BASE);
         // We need to provide user data as a yaml file to specify runAs: admin
         // Maintain that file as yaml and source here to ensure formatting.
@@ -109,7 +107,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
         } else {
           instanceType = ec2.InstanceType.of(ec2.InstanceClass.C7A, ec2.InstanceSize.LARGE);
         }
-        this.asgName = 'LinuxASG';
+        asgName = 'LinuxASG';
         userDataString = this.userData(props, 'setup-linux-runner.sh');
         if (this.version === '2') {
           machineImage = ec2.MachineImage.latestAmazonLinux2();
@@ -155,16 +153,14 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
       })
     );
 
-    const resourceGroup = this.createResourceGroup();
-
     // Create a 100GiB volume to be used as instance root volume
     const rootVolume: ec2.BlockDevice = {
       deviceName: '/dev/sda1',
       volume: ec2.BlockDeviceVolume.ebs(100)
     };
 
-    const ltName = `${this.asgName}LaunchTemplate`;
-    const keyPairName = `${this.asgName}KeyPair`;
+    const ltName = `${asgName}LaunchTemplate`;
+    const keyPairName = `${asgName}KeyPair`;
     const lt = new ec2.LaunchTemplate(this, ltName, {
       requireImdsv2: true,
       instanceType,
@@ -176,16 +172,28 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
       blockDevices: [rootVolume]
     });
 
+    // Create a custom name for this as names for resource groups cannot be repeated
+    const resourceGroupName = `${this.repo}-${this.platform}-${this.version.split('.')[0]}-${this.arch}HostGroup`;
+    const resourceGroupDescription = 'Host resource group for finchs infrastructure';
+
+    let ltPlacementConfig = {};
+    if (this.requiresDedicatedHosts()) {
+      const hostResourceGroup = this.createHostResourceGroup(resourceGroupName, resourceGroupDescription);
+      ltPlacementConfig = {
+        placement: {
+          tenancy: 'host',
+          hostResourceGroupArn: hostResourceGroup.attrArn
+        }
+      };
+    }
+
     // Escape hatch to cfnLaunchTemplate as the L2 construct lacked some required
     // configurations.
     const cfnLt = lt.node.defaultChild as ec2.CfnLaunchTemplate;
     cfnLt.launchTemplateData = {
       ...cfnLt.launchTemplateData,
       ...(this.requiresDedicatedHosts() && {
-        placement: {
-          tenancy: 'host',
-          hostResourceGroupArn: resourceGroup.attrArn
-        },
+        ...ltPlacementConfig,
         licenseSpecifications: [{ licenseConfigurationArn: props.licenseArn }]
       }),
       tagSpecifications: [
@@ -201,7 +209,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
       ]
     };
 
-    const asg = new autoscaling.AutoScalingGroup(this, this.asgName, {
+    const asg = new autoscaling.AutoScalingGroup(this, asgName, {
       vpc,
       desiredCapacity: props.type.desiredInstances,
       maxCapacity: props.type.desiredInstances,
@@ -226,6 +234,8 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
       })
     });
 
+    this.createTagBasedResourceGroup(resourceGroupName, resourceGroupDescription, asg.autoScalingGroupName);
+
     if (props.stage === ENVIRONMENT_STAGE.Beta) {
       new autoscaling.CfnScheduledAction(this, 'SpinDownBetaInstances', {
         autoScalingGroupName: asg.autoScalingGroupName,
@@ -236,67 +246,65 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
     }
   }
 
-  createResourceGroup() {
-    // Create a custom name for this as names for resource groups cannot be repeated
-    const resourceGroupName = `${this.repo}-${this.platform}-${this.version.split('.')[0]}-${this.arch}HostGroup`;
-    const resourceGroupDescription = 'Host resource group for finchs infrastructure';
-
-    if (this.requiresDedicatedHosts()) {
-      return new resourcegroups.CfnGroup(this, resourceGroupName, {
-        name: resourceGroupName,
-        description: resourceGroupDescription,
-        configuration: [
-          {
-            // This resource group is only used for management of dedicated hosts, as indicated by
-            // the "AWS::EC2::HostManagement" type
-            type: 'AWS::EC2::HostManagement',
-            parameters: [
-              {
-                name: 'auto-allocate-host',
-                values: ['true']
-              },
-              {
-                name: 'auto-release-host',
-                values: ['true']
-              },
-              {
-                name: 'any-host-based-license-configuration',
-                values: ['true']
-              }
-            ]
-          },
-          {
-            type: 'AWS::ResourceGroups::Generic',
-            parameters: [
-              {
-                name: 'allowed-resource-types',
-                values: ['AWS::EC2::Host']
-              },
-              {
-                name: 'deletion-protection',
-                values: ['UNLESS_EMPTY']
-              }
-            ]
-          }
-        ]
-      });
-    } else {
-      return new resourcegroups.CfnGroup(this, resourceGroupName, {
-        name: resourceGroupName,
-        description: resourceGroupDescription,
-        resourceQuery: {
-          type: 'TAG_FILTERS_1_0',
-          query: {
-            resourceTypeFilters: ['AWS::EC2::Instance'],
-            tagFilters: [
-              {
-                key: 'aws:autoscaling:groupName',
-                values: [this.asgName]
-              }
-            ]
-          }
+  // a host resource group is used by the launch template for placement of instances on dedicated hosts
+  createHostResourceGroup(resourceGroupName: string, resourceGroupDescription: string) {
+    return new resourcegroups.CfnGroup(this, resourceGroupName, {
+      name: resourceGroupName,
+      description: resourceGroupDescription,
+      configuration: [
+        {
+          // This resource group is only used for management of dedicated hosts, as indicated by
+          // the "AWS::EC2::HostManagement" type
+          type: 'AWS::EC2::HostManagement',
+          parameters: [
+            {
+              name: 'auto-allocate-host',
+              values: ['true']
+            },
+            {
+              name: 'auto-release-host',
+              values: ['true']
+            },
+            {
+              name: 'any-host-based-license-configuration',
+              values: ['true']
+            }
+          ]
+        },
+        {
+          type: 'AWS::ResourceGroups::Generic',
+          parameters: [
+            {
+              name: 'allowed-resource-types',
+              values: ['AWS::EC2::Host']
+            },
+            {
+              name: 'deletion-protection',
+              values: ['UNLESS_EMPTY']
+            }
+          ]
         }
-      });
-    }
+      ]
+    });
+  }
+
+  // tag based resource groups filter EC2 instances by tag, anything matching will be included in the group
+  createTagBasedResourceGroup(resourceGroupName: string, resourceGroupDescription: string, asgName: string) {
+    return new resourcegroups.CfnGroup(this, resourceGroupName, {
+      name: resourceGroupName,
+      description: resourceGroupDescription,
+      resourceQuery: {
+        type: 'TAG_FILTERS_1_0',
+        query: {
+          resourceTypeFilters: ['AWS::EC2::Instance'],
+          tagFilters: [
+            {
+              key: 'aws:autoscaling:groupName',
+              values: [asgName]
+            }
+          ]
+        }
+      }
+    });
   }
 }
