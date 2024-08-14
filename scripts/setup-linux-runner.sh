@@ -18,16 +18,12 @@ if [ "${OS_NAME}" = "Amazon Linux" ]; then
     USERNAME="ec2-user"
     DISTRO="amazonlinux"
     if [ "${OS_VERSION}" = "2" ]; then
-        GH_RUNNER_DEPENDENCIES="openssl krb5-libs zlib"
+        GH_RUNNER_DEPENDENCIES="openssl krb5-libs zlib jq"
         ADDITIONAL_PACKAGES="policycoreutils-python ${GH_RUNNER_DEPENDENCIES}"
     elif [ "${OS_VERSION}" = "2023" ]; then
         GH_RUNNER_DEPENDENCIES="lttng-ust openssl-libs krb5-libs zlib libicu"
         ADDITIONAL_PACKAGES="policycoreutils-python-utils ${GH_RUNNER_DEPENDENCIES}"
     fi
-elif [ "${OS_NAME}" = "Fedora Linux" ]; then
-    DISTRO="fedora"
-    USERNAME="fedora"
-    ADDITIONAL_PACKAGES="policycoreutils-python-utils awscli2"
 fi
 
 HOMEDIR="/home/${USERNAME}"
@@ -72,10 +68,7 @@ tar -C "${RUNNER_DIR}" -xzf "./${GH_RUNNER_FILENAME}"
 chown -R "${USERNAME}:${USERNAME}" "${RUNNER_DIR}"
 rm "${GH_RUNNER_FILENAME}"
 
-# Install SSM Agent on non-AL hosts
-if [ "${DISTRO}" = "fedora" ]; then
-    yum install -y "https://s3.amazonaws.com/ec2-downloads-windows/SSMAgent/latest/linux_${GO_ARCH}/amazon-ssm-agent.rpm"
-fi
+# TODO: install SSM agent on non-AL hosts if needed
 
 # Get GH API key and fetch a runner registration token
 GH_KEY=$(aws secretsmanager get-secret-value --secret-id $REPO-runner-reg-key --region $REGION | jq '.SecretString' -r)
