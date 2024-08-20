@@ -33,7 +33,8 @@ mkdir -p "${RUNNER_DIR}" && cd "${HOMEDIR}"
 # TODO: add check for non-Fedora based systems if needed
 yum upgrade
 yum group install -y "Development Tools"
-yum install golang -y
+# build dependencies for packages
+yum install golang zlib-static -y
 if [ ! -z "${ADDITIONAL_PACKAGES}" ]; then
     # this sometimes fails on Amazon Linux 2, so retry if necessary
     for i in {1..2}; do yum install -y ${ADDITIONAL_PACKAGES} && break || sleep 5; done
@@ -51,12 +52,6 @@ fi
 
 GH_RUNNER_FILENAME="actions-runner-linux-${GH_RUNNER_ARCH}-2.319.0.tar.gz"
 GH_RUNNER_DOWNLOAD_URL="https://github.com/actions/runner/releases/download/v2.319.0/${GH_RUNNER_FILENAME}"
-
-curl -OL "${GO_DOWNLOAD_URL}"
-echo "${GO_DOWNLOAD_HASH}  ${GO_FILENAME}" | sha256sum -c
-rm -rf /usr/local/go && tar -C /usr/local -xzf "./${GO_FILENAME}"
-echo "export PATH=$PATH:/usr/local/go/bin" >/etc/profile.d/go.sh
-rm "${GO_FILENAME}"
 
 curl -OL "${GH_RUNNER_DOWNLOAD_URL}"
 echo "${GH_RUNNER_DOWNLOAD_HASH}  ${GH_RUNNER_FILENAME}" | sha256sum -c
