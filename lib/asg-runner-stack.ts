@@ -66,6 +66,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
     let machineImage: ec2.IMachineImage;
     let userDataString = '';
     let asgName = '';
+    let rootDeviceName = '';
     switch (this.platform) {
       case PlatformType.MAC: {
         if (this.arch === 'arm') {
@@ -86,11 +87,13 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
         });
         asgName = 'MacASG';
         userDataString = this.userData(props, 'setup-runner.sh');
+        rootDeviceName = '/dev/sda1'
       }
       case PlatformType.WINDOWS: {
         instanceType = ec2.InstanceType.of(ec2.InstanceClass.M5ZN, ec2.InstanceSize.METAL);
         asgName = 'WindowsASG';
         machineImage = ec2.MachineImage.latestWindows(ec2.WindowsVersion.WINDOWS_SERVER_2022_ENGLISH_FULL_BASE);
+        rootDeviceName = '/dev/sda1'
         // We need to provide user data as a yaml file to specify runAs: admin
         // Maintain that file as yaml and source here to ensure formatting.
         userDataString = readFileSync('./scripts/windows-runner-user-data.yaml', 'utf8')
@@ -114,6 +117,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
         } else {
           machineImage = ec2.MachineImage.latestAmazonLinux2023();
         }
+        rootDeviceName = '/dev/xvda'
       }
     }
 
@@ -155,7 +159,7 @@ export class ASGRunnerStack extends cdk.Stack implements IASGRunnerStack {
 
     // Create a 100GiB volume to be used as instance root volume
     const rootVolume: ec2.BlockDevice = {
-      deviceName: '/dev/sda1',
+      deviceName: rootDeviceName,
       volume: ec2.BlockDeviceVolume.ebs(100)
     };
 
