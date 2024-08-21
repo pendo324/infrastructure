@@ -89,3 +89,7 @@ semanage fcontext -a -t "bin_t" "${RUNNER_DIR}/runsvc.sh"
 ./svc.sh install "${USERNAME}"
 restorecon -Fv "${RUNNER_DIR}/runsvc.sh"
 ./svc.sh start
+
+# run ssh-agent on ec2-user login
+# this sets SSH_AUTH_SOCK, which is needed by one of Finch's e2e tests
+echo 'eval "$(ssh-agent -s)"' >> "${HOMEDIR}/.bashrc"
