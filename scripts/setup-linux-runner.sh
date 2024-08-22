@@ -34,7 +34,7 @@ mkdir -p "${RUNNER_DIR}" && cd "${HOMEDIR}"
 yum upgrade
 yum group install -y "Development Tools"
 # build dependencies for packages
-yum install golang zlib-static -y
+yum install -y golang zlib-static containerd nerdctl cni-plugins
 if [ ! -z "${ADDITIONAL_PACKAGES}" ]; then
     # this sometimes fails on Amazon Linux 2, so retry if necessary
     for i in {1..2}; do yum install -y ${ADDITIONAL_PACKAGES} && break || sleep 5; done
