@@ -17,6 +17,7 @@ eval "OS_VERSION=\"\${${OS_RELEASE_PREFIX}_VERSION_ID}\""
 if [ "${OS_NAME}" = "Amazon Linux" ]; then
     USERNAME="ec2-user"
     DISTRO="amazonlinux"
+    BASE_PACKAGES="golang zlib-static containerd nerdctl cni-plugins iptables"
     if [ "${OS_VERSION}" = "2" ]; then
         GH_RUNNER_DEPENDENCIES="openssl krb5-libs zlib jq"
         ADDITIONAL_PACKAGES="policycoreutils-python systemd-rpm-macros ${GH_RUNNER_DEPENDENCIES}"
@@ -34,11 +35,10 @@ mkdir -p "${RUNNER_DIR}" && cd "${HOMEDIR}"
 yum upgrade
 yum group install -y "Development Tools"
 # build dependencies for packages
-yum install -y golang zlib-static containerd nerdctl cni-plugins iptables
-if [ ! -z "${ADDITIONAL_PACKAGES}" ]; then
-    # this sometimes fails on Amazon Linux 2, so retry if necessary
-    for i in {1..2}; do yum install -y ${ADDITIONAL_PACKAGES} && break || sleep 5; done
-fi
+# this sometimes fails on Amazon Linux 2023, so retry if necessary
+for i in {1..2}; do
+    yum install -y ${BASE_PACKAGES} ${ADDITIONAL_PACKAGES} && break || sleep 5
+done
 
 # start containerd
 systemctl enable --now containerd
