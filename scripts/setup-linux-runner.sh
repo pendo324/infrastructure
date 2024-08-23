@@ -40,6 +40,9 @@ if [ ! -z "${ADDITIONAL_PACKAGES}" ]; then
     for i in {1..2}; do yum install -y ${ADDITIONAL_PACKAGES} && break || sleep 5; done
 fi
 
+# start containerd
+systemctl enable --now containerd
+
 # configure download parameters based on architecture
 UNAME_MACHINE="$(/usr/bin/uname -m)"
 if [ "${UNAME_MACHINE}" = "aarch64" ]; then
