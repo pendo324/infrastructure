@@ -23,8 +23,8 @@ export class SSMPatchingStack extends cdk.Stack {
       resourceType: 'INSTANCE',
       targets: [
         {
-          key: 'InstanceIds',
-          values: ['*']
+          key: 'tag:PVRE-Reporting',
+          values: ['SSM']
         }
       ]
     });
