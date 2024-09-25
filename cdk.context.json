@@ -1,19 +1,8 @@
 {
-  "availability-zones:account=820462304213:region=us-west-2": [
-    "us-west-2a",
-    "us-west-2b",
-    "us-west-2c",
-    "us-west-2d"
-  ],
-  "availability-zones:account=090529234398:region=us-west-2": [
-    "us-west-2a",
-    "us-west-2b",
-    "us-west-2c",
-    "us-west-2d"
-  ],
-  "vpc-provider:account=820462304213:filter.isDefault=true:region=us-west-2:returnAsymmetricSubnets=true": {
-    "vpcId": "vpc-06de4cdd1050128af",
+  "vpc-provider:account=794587050305:filter.isDefault=true:region=us-east-1:returnAsymmetricSubnets=true": {
+    "vpcId": "vpc-6479581e",
     "vpcCidrBlock": "172.31.0.0/16",
+    "ownerAccountId": "794587050305",
     "availabilityZones": [],
     "subnetGroups": [
       {
@@ -21,113 +10,43 @@
         "type": "Public",
         "subnets": [
           {
-            "subnetId": "subnet-0ebe88c6840a07821",
-            "cidr": "172.31.16.0/20",
-            "availabilityZone": "us-west-2a",
-            "routeTableId": "rtb-0dc49c558df03064c"
-          },
-          {
-            "subnetId": "subnet-0babc2053bb07dabc",
+            "subnetId": "subnet-becddbe2",
             "cidr": "172.31.32.0/20",
-            "availabilityZone": "us-west-2b",
-            "routeTableId": "rtb-0dc49c558df03064c"
+            "availabilityZone": "us-east-1a",
+            "routeTableId": "rtb-7ce34f02"
           },
           {
-            "subnetId": "subnet-0b5c52262bc868779",
+            "subnetId": "subnet-f04b5e97",
             "cidr": "172.31.0.0/20",
-            "availabilityZone": "us-west-2c",
-            "routeTableId": "rtb-0dc49c558df03064c"
+            "availabilityZone": "us-east-1b",
+            "routeTableId": "rtb-7ce34f02"
           },
           {
-            "subnetId": "subnet-0d19a1a00efb1f4a3",
+            "subnetId": "subnet-a599898b",
+            "cidr": "172.31.80.0/20",
+            "availabilityZone": "us-east-1c",
+            "routeTableId": "rtb-7ce34f02"
+          },
+          {
+            "subnetId": "subnet-5471d419",
+            "cidr": "172.31.16.0/20",
+            "availabilityZone": "us-east-1d",
+            "routeTableId": "rtb-7ce34f02"
+          },
+          {
+            "subnetId": "subnet-84d188ba",
             "cidr": "172.31.48.0/20",
-            "availabilityZone": "us-west-2d",
-            "routeTableId": "rtb-0dc49c558df03064c"
+            "availabilityZone": "us-east-1e",
+            "routeTableId": "rtb-7ce34f02"
+          },
+          {
+            "subnetId": "subnet-9ffd3291",
+            "cidr": "172.31.64.0/20",
+            "availabilityZone": "us-east-1f",
+            "routeTableId": "rtb-7ce34f02"
           }
         ]
       }
     ]
-  },
-  "vpc-provider:account=090529234398:filter.isDefault=true:region=us-west-2:returnAsymmetricSubnets=true": {
-    "vpcId": "vpc-04f2a33e813718bda",
-    "vpcCidrBlock": "172.31.0.0/16",
-    "availabilityZones": [],
-    "subnetGroups": [
-      {
-        "name": "Public",
-        "type": "Public",
-        "subnets": [
-          {
-            "subnetId": "subnet-085ebdeb2a40fb8d8",
-            "cidr": "172.31.32.0/20",
-            "availabilityZone": "us-west-2a",
-            "routeTableId": "rtb-038f353b4f9099666"
-          },
-          {
-            "subnetId": "subnet-02caced18cce39965",
-            "cidr": "172.31.16.0/20",
-            "availabilityZone": "us-west-2b",
-            "routeTableId": "rtb-038f353b4f9099666"
-          },
-          {
-            "subnetId": "subnet-016fe97f7e20db500",
-            "cidr": "172.31.0.0/20",
-            "availabilityZone": "us-west-2c",
-            "routeTableId": "rtb-038f353b4f9099666"
-          },
-          {
-            "subnetId": "subnet-09f074e9d6c16c1f8",
-            "cidr": "172.31.48.0/20",
-            "availabilityZone": "us-west-2d",
-            "routeTableId": "rtb-038f353b4f9099666"
-          }
-        ]
-      }
-    ]
-  },
-  "vpc-provider:account=019528120233:filter.isDefault=true:region=us-east-2:returnAsymmetricSubnets=true": {
-    "vpcId": "vpc-09e086b046b77b394",
-    "vpcCidrBlock": "172.31.0.0/16",
-    "availabilityZones": [],
-    "subnetGroups": [
-      {
-        "name": "Public",
-        "type": "Public",
-        "subnets": [
-          {
-            "subnetId": "subnet-0ed000ae57a777892",
-            "cidr": "172.31.0.0/20",
-            "availabilityZone": "us-east-2a",
-            "routeTableId": "rtb-03950063f7712710d"
-          },
-          {
-            "subnetId": "subnet-01561873c2253c130",
-            "cidr": "172.31.16.0/20",
-            "availabilityZone": "us-east-2b",
-            "routeTableId": "rtb-03950063f7712710d"
-          },
-          {
-            "subnetId": "subnet-0fd01d9d69c3969ff",
-            "cidr": "172.31.32.0/20",
-            "availabilityZone": "us-east-2c",
-            "routeTableId": "rtb-03950063f7712710d"
-          }
-        ]
-      }
-    ]
-  },
-  "ami:account=090529234398:filters.architecture.0=arm64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-14.1*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-west-2": "ami-0a18d0d3ba8c9596b",
-  "ami:account=090529234398:filters.architecture.0=x86_64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-14.1*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-west-2": "ami-0a3536378b0dcbcb0",
-  "ami:account=019528120233:filters.architecture.0=arm64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-14.1*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-east-2": "ami-0fb1a8ce1a0e727d8",
-  "ami:account=019528120233:filters.architecture.0=x86_64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-14.1*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-east-2": "ami-0513d1dba13c208f0",
-  "ami:account=820462304213:filters.architecture.0=arm64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-13.6*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-west-2": "ami-0b71bd84ecf59ddb6",
-  "ami:account=820462304213:filters.architecture.0=x86_64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-13.6*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-west-2": "ami-0bd1dced82749f0c9",
-  "ami:account=090529234398:filters.architecture.0=arm64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-13.6*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-west-2": "ami-0b71bd84ecf59ddb6",
-  "ami:account=090529234398:filters.architecture.0=x86_64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-13.6*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-west-2": "ami-0bd1dced82749f0c9",
-  "ami:account=090529234398:filters.architecture.0=arm64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-14.5*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-west-2": "ami-0ac6cd62ce9ccbae4",
-  "ami:account=090529234398:filters.architecture.0=x86_64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-14.5*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-west-2": "ami-034d441e881b05d91",
-  "ami:account=019528120233:filters.architecture.0=arm64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-13.6*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-east-2": "ami-0ba140ebbe2896eb2",
-  "ami:account=019528120233:filters.architecture.0=x86_64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-13.6*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-east-2": "ami-0603a57be9b8fc392",
-  "ami:account=019528120233:filters.architecture.0=arm64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-14.5*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-east-2": "ami-08068ef2743ad7862",
-  "ami:account=019528120233:filters.architecture.0=x86_64_mac:filters.image-type.0=machine:filters.name.0=amzn-ec2-macos-14.5*:filters.owner-alias.0=amazon:filters.root-device-type.0=ebs:filters.state.0=available:filters.virtualization-type.0=hvm:region=us-east-2": "ami-0b7a317a30ce6d3a0"
+  }
 }

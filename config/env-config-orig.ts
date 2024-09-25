@@ -5,7 +5,6 @@ import config from './env-dev.json';
  * Class for environment configurations. Outlines the account and region.
  */
 class EnvConfigClass {
-  public readonly isDev: boolean;
   public readonly envPipeline: cdk.Environment;
   public readonly envBeta: cdk.Environment;
   public readonly envProd: cdk.Environment;
@@ -13,12 +12,10 @@ class EnvConfigClass {
 
   constructor(configFile: any) {
     if (configFile.envDev) {
-      this.isDev = true;
       this.envPipeline = configFile.envDev;
-      this.envBeta = configFile.envDev;
-      return;
+      this.envBeta = configFile.envBeta;
+      return
     }
-
     if (!configFile.envPipeline) {
       throw new Error('Error: envPipeline must be specified.');
     }

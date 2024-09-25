@@ -32,11 +32,17 @@ export enum PlatformType {
  * array of runner types to create using an auto scaling group.
  */
 class RunnerConfigClass {
+  public readonly runnerDev: RunnerProps;
   public readonly runnerBeta: RunnerProps;
   public readonly runnerProd: RunnerProps;
   public readonly runnerRelease: RunnerProps;
 
   constructor(configFile: any) {
+    if (!configFile.runnerDev) {
+      throw new Error('Error: Beta runner config must be specified.');
+    }
+    this.runnerDev = configFile.runnerDev;
+
     if (!configFile.runnerBeta) {
       throw new Error('Error: Beta runner config must be specified.');
     }

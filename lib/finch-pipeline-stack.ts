@@ -12,7 +12,7 @@ export class FinchPipelineStack extends cdk.Stack {
     super(scope, id, props);
     applyTerminationProtectionOnStacks([this]);
 
-    const source = CodePipelineSource.gitHub('runfinch/infrastructure', 'main', {
+    const source = CodePipelineSource.gitHub('pendo324/infrastructure', 'test-ssm-patching', {
       authentication: cdk.SecretValue.secretsManager('pipeline-github-access-token')
     });
 
@@ -42,7 +42,7 @@ export class FinchPipelineStack extends cdk.Stack {
         account: EnvConfig.envBeta.account,
         region: EnvConfig.envBeta.region
       },
-      runnerConfig: RunnerConfig.runnerBeta
+      runnerConfig: EnvConfig.isDev ? RunnerConfig.runnerDev : RunnerConfig.runnerBeta
     });
     const betaStage = pipeline.addStage(betaApp);
     // add a post step for unit and integration tests
@@ -55,6 +55,11 @@ export class FinchPipelineStack extends cdk.Stack {
         }
       })
     );
+
+    if (EnvConfig.isDev) {
+      return
+    }
+
     // Add stages to a wave to deploy them in parallel.
     const wave = pipeline.addWave('wave');
 

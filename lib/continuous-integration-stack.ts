@@ -1,11 +1,11 @@
 import * as cdk from 'aws-cdk-lib';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
-import * as s3 from 'aws-cdk-lib/aws-s3';
 import * as iam from 'aws-cdk-lib/aws-iam';
+import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 
-import { CloudfrontCdn } from './cloudfront_cdn';
 import { applyTerminationProtectionOnStacks } from './aspects/stack-termination-protection';
+import { CloudfrontCdn } from './cloudfront_cdn';
 
 interface ContinuousIntegrationStackProps extends cdk.StackProps {
   rootfsEcrRepository: ecr.Repository;
@@ -37,7 +37,7 @@ export class ContinuousIntegrationStack extends cdk.Stack {
     cfnRole.addOverride('Properties.AssumeRolePolicyDocument.Statement.0.Condition', {
       StringLike: {
         'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com',
-        'token.actions.githubusercontent.com:sub': 'repo:runfinch/*'
+        'token.actions.githubusercontent.com:sub': 'repo:pendo324/*'
       }
     });
 

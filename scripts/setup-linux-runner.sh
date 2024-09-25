@@ -71,7 +71,7 @@ RUNNER_REG_TOKEN=$(curl -L -s \
     -H "Accept: application/vnd.github+json" \
     -H "Authorization: Bearer $GH_KEY" \
     -H "X-GitHub-Api-Version: 2022-11-28" \
-    "https://api.github.com/repos/runfinch/${REPO}/actions/runners/registration-token" | jq -r '.token')
+    "https://api.github.com/repos/pendo324/${REPO}/actions/runners/registration-token" | jq -r '.token')
 
 if [ -z ${GH_RUNNER_DEPENDENCIES+x} ]; then
     echo "Executing installdependencies.sh because GH_RUNNER_DEPENDENCIES is not defined."
@@ -81,7 +81,7 @@ fi
 # Configure the runner with the registration token, launch the service
 # these commands must NOT be run as root
 sudo -i -u "${USERNAME}" bash <<EOF
-"${RUNNER_DIR}/config.sh" --url "https://github.com/runfinch/${REPO}" --unattended --token "${RUNNER_REG_TOKEN}" --work _work --labels "${LABEL_ARCH},${DISTRO},${OS_VERSION},${LABEL_STAGE}"
+"${RUNNER_DIR}/config.sh" --url "https://github.com/pendo324/${REPO}" --unattended --token "${RUNNER_REG_TOKEN}" --work _work --labels "${LABEL_ARCH},${DISTRO},${OS_VERSION},${LABEL_STAGE}"
 EOF
 
 # these commands need to be run from "runner root" as the root user
