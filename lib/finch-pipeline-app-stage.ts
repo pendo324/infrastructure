@@ -4,7 +4,6 @@ import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { PlatformType, RunnerProps } from '../config/runner-config';
-import { ArtifactBucketCloudfrontStack } from './artifact-bucket-cloudfront';
 import { ASGRunnerStack } from './asg-runner-stack';
 import { ContinuousIntegrationStack } from './continuous-integration-stack';
 import { ECRRepositoryStack } from './ecr-repo-stack';
@@ -52,13 +51,13 @@ export class FinchPipelineAppStage extends cdk.Stage {
     });
 
     if (props.environmentStage !== ENVIRONMENT_STAGE.Release) {
-      const artifactBucketCloudfrontStack = new ArtifactBucketCloudfrontStack(
-        this,
-        'ArtifactCloudfront',
-        this.stageName
-      );
-      this.artifactBucketCloudfrontUrlOutput = artifactBucketCloudfrontStack.urlOutput;
-      this.cloudfrontBucket = artifactBucketCloudfrontStack.bucket;
+      // const artifactBucketCloudfrontStack = new ArtifactBucketCloudfrontStack(
+      //   this,
+      //   'ArtifactCloudfront',
+      //   this.stageName
+      // );
+      // this.artifactBucketCloudfrontUrlOutput = artifactBucketCloudfrontStack.urlOutput;
+      // this.cloudfrontBucket = artifactBucketCloudfrontStack.bucket;
 
       const ecrRepositoryStack = new ECRRepositoryStack(this, 'ECRRepositoryStack', this.stageName);
 

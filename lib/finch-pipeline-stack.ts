@@ -45,6 +45,11 @@ export class FinchPipelineStack extends cdk.Stack {
       runnerConfig: EnvConfig.isDev ? RunnerConfig.runnerDev : RunnerConfig.runnerBeta
     });
     const betaStage = pipeline.addStage(betaApp);
+
+    if (EnvConfig.isDev) {
+      return
+    }
+
     // add a post step for unit and integration tests
     betaStage.addPost(
       new ShellStep('Unit and Integration Test', {
@@ -55,10 +60,6 @@ export class FinchPipelineStack extends cdk.Stack {
         }
       })
     );
-
-    if (EnvConfig.isDev) {
-      return
-    }
 
     // Add stages to a wave to deploy them in parallel.
     const wave = pipeline.addWave('wave');
