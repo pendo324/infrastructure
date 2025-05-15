@@ -1,10 +1,9 @@
-import { Environment, Stack, CfnResource } from 'aws-cdk-lib';
+import { CfnResource, Environment, Stack } from 'aws-cdk-lib';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as ec2 from 'aws-cdk-lib/aws-ec2';
-import { GITHUB_ALLOWLISTED_ACCOUNT_IDS } from './constants';
-import { Construct } from 'constructs';
 import { Key } from 'aws-cdk-lib/aws-kms';
-import { toStackName } from './utils';
+import { Construct } from 'constructs';
+import { GITHUB_ALLOWLISTED_ACCOUNT_IDS, toStackName } from './utils';
 
 const webhookFiltersArr: codebuild.FilterGroup[] = [];
 
@@ -19,6 +18,36 @@ const githHubSource = codebuild.Source.gitHub({
     webhook: true,
     webhookFilters: webhookFiltersArr,
 });
+
+class LinuxAMIBuildImage implements codebuild.IBuildImage {
+    readonly type: string;
+    readonly defaultComputeType: codebuild.ComputeType;
+    
+    constructor(readonly imageId: string) {
+        this.type = codebuild.EnvironmentType.LINUX_EC2;
+        this.imageId = imageId;
+        this.defaultComputeType = codebuild.ComputeType.MEDIUM;
+    }
+    
+    validate(buildEnvironment: codebuild.BuildEnvironment): string[] {
+        return [];
+    }
+    
+    runScriptBuildspec(entrypoint: string): codebuild.BuildSpec {
+        // Create a buildspec that runs the script
+        return codebuild.BuildSpec.fromObject({
+            version: '0.2',
+            phases: {
+                build: {
+                    commands: [
+                        `chmod +x ${entrypoint}`,
+                        `./${entrypoint}`
+                    ]
+                }
+            }
+        });
+    }
+}
 
 /**
  * Default properties for CodeBuildStack configuration.
@@ -47,7 +76,6 @@ export class CodeBuildStackProps {
     region: string;
     arch: string;
     amiSearchString: string;
-    buildImage: codebuild.IBuildImage;
     environmentType: codebuild.EnvironmentType;
     imageFilterProps?: {
         virtualizationType: string[],
@@ -84,16 +112,19 @@ export class CodeBuildStack extends Stack {
             environmentType: props.environmentType,
         });
 
+        const image = machineImage.getImage(this)
+
         const cfnFleet = fleet.node.defaultChild as CfnResource;
-        cfnFleet.addPropertyOverride('ImageId', machineImage.getImage(this).imageId);
-    
+        cfnFleet.addPropertyOverride('ImageId', image.imageId);       
+
         return new codebuild.Project(this, id, {
             projectName: props.projectName,
             source: githHubSource,
             environment: {
                 ...(props.projectEnvironmentProps || CodeBuildStackDefaultProps.projectEnvironmentProps),
                 fleet: fleet,
-                buildImage: props.buildImage,
+                buildImage: new LinuxAMIBuildImage(image.imageId),
+                computeType: codebuild.ComputeType.MEDIUM
             },
             encryptionKey: new Key(this, `codebuild-${toStackName(props.arch)}-key-${props.region}`, {
                 description: 'Kms Key to encrypt data-at-rest',

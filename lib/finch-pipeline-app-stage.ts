@@ -1,20 +1,20 @@
 import * as cdk from 'aws-cdk-lib';
 import { CfnOutput } from 'aws-cdk-lib';
+import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 import * as ecr from 'aws-cdk-lib/aws-ecr';
 import * as s3 from 'aws-cdk-lib/aws-s3';
 import { Construct } from 'constructs';
 import { PlatformType, RunnerProps } from '../config/runner-config';
 import { ArtifactBucketCloudfrontStack } from './artifact-bucket-cloudfront';
 import { ASGRunnerStack } from './asg-runner-stack';
+import { applyTerminationProtectionOnStacks } from './aspects/stack-termination-protection';
+import { CodeBuildStack } from './codebuild-stack';
 import { ContinuousIntegrationStack } from './continuous-integration-stack';
 import { ECRRepositoryStack } from './ecr-repo-stack';
 import { EventBridgeScanNotifsStack } from './event-bridge-scan-notifs-stack';
 import { PVREReportingStack } from './pvre-reporting-stack';
 import { SSMPatchingStack } from './ssm-patching-stack';
-import { applyTerminationProtectionOnStacks } from './aspects/stack-termination-protection';
 import { CODEBUILD_ARCHS, toStackName } from './utils';
-import { CodeBuildStack } from './codebuild-stack';
-import * as codebuild from 'aws-cdk-lib/aws-codebuild';
 
 
 export enum ENVIRONMENT_STAGE {
@@ -94,7 +94,6 @@ export class FinchPipelineAppStage extends cdk.Stage {
         region: 'us-west-2',
         arch: arch,
         amiSearchString: 'ubuntu*22.04*',
-        buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         environmentType: codebuild.EnvironmentType.LINUX_EC2,
       });
     }

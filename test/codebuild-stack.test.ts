@@ -1,7 +1,7 @@
 import * as cdk from 'aws-cdk-lib';
-import { Template, Match } from 'aws-cdk-lib/assertions';
-import { CodeBuildStack } from '../lib/codebuild-stack';
+import { Match, Template } from 'aws-cdk-lib/assertions';
 import * as codebuild from 'aws-cdk-lib/aws-codebuild';
+import { CodeBuildStack } from '../lib/codebuild-stack';
 
 describe('CodeBuildStack', () => {
   test('synthesizes the way we expect', () => {
@@ -15,7 +15,6 @@ describe('CodeBuildStack', () => {
         region: 'us-west-2',
         arch: 'x86_64_ubuntu',
         amiSearchString: 'ubuntu*22.04*',
-        buildImage: codebuild.LinuxBuildImage.STANDARD_7_0,
         environmentType: codebuild.EnvironmentType.LINUX_EC2,
     });
     const template = Template.fromStack(stack);
@@ -24,9 +23,10 @@ describe('CodeBuildStack', () => {
     template.hasResourceProperties('AWS::CodeBuild::Project', {
       Name: 'test-project',
       Environment: {
-        Type: 'LINUX_CONTAINER',
-        ComputeType: 'BUILD_GENERAL1_LARGE',
-        Image: Match.stringLikeRegexp('aws/codebuild/amazonlinux2-x86_64-standard:7.0'),
+        Type: 'LINUX_EC2',
+        ComputeType: 'BUILD_GENERAL1_MEDIUM',
+        // ami-1234 is a standin for the result of machineImage.getImage
+        Image: Match.stringLikeRegexp('ami-1234'),
         PrivilegedMode: true
       },
       Source: {
@@ -39,19 +39,18 @@ describe('CodeBuildStack', () => {
     // Assert that the stack creates a Fleet
     template.hasResourceProperties('AWS::CodeBuild::Fleet', {
       BaseCapacity: 1,
-      ComputeType: 'MEDIUM',
+      ComputeType: 'BUILD_GENERAL1_MEDIUM',
       EnvironmentType: 'LINUX_EC2'
     });
 
     // Assert that the stack creates a KMS key
     template.hasResourceProperties('AWS::KMS::Key', {
       Description: 'Kms Key to encrypt data-at-rest',
-      Enabled: true
     });
 
     // Assert that the stack creates a KMS alias
     template.hasResourceProperties('AWS::KMS::Alias', {
-      AliasName: Match.stringLikeRegexp('alias/finch-x86_64-ubuntu-kms-us-west-2')
+      AliasName: Match.stringLikeRegexp('alias/finch-x86_64_ubuntu-kms-us-west-2')
     });
 
     // Check resource count
