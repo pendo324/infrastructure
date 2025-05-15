@@ -21,7 +21,6 @@ const githHubSource = codebuild.Source.gitHub({
 
 // @ts-expect-error Extending private class for mocking
 class LinuxAMIBuildImage extends codebuild.LinuxBuildImage implements codebuild.IBuildImage {
-    declare imageId: string;
     declare type: codebuild.EnvironmentType;
     
     constructor(imageId: string) {
