@@ -19,33 +19,15 @@ const githHubSource = codebuild.Source.gitHub({
     webhookFilters: webhookFiltersArr,
 });
 
-class LinuxAMIBuildImage implements codebuild.IBuildImage {
-    readonly type: string;
-    readonly defaultComputeType: codebuild.ComputeType;
+// @ts-expect-error Extending private class for mocking
+class LinuxAMIBuildImage extends codebuild.LinuxBuildImage implements codebuild.IBuildImage {
+    declare imageId: string;
+    declare type: codebuild.EnvironmentType;
     
-    constructor(readonly imageId: string) {
+    constructor(imageId: string) {
+        // @ts-expect-error Extending private class for mocking
+        super({ imageId });
         this.type = codebuild.EnvironmentType.LINUX_EC2;
-        this.imageId = imageId;
-        this.defaultComputeType = codebuild.ComputeType.MEDIUM;
-    }
-    
-    validate(buildEnvironment: codebuild.BuildEnvironment): string[] {
-        return [];
-    }
-    
-    runScriptBuildspec(entrypoint: string): codebuild.BuildSpec {
-        // Create a buildspec that runs the script
-        return codebuild.BuildSpec.fromObject({
-            version: '0.2',
-            phases: {
-                build: {
-                    commands: [
-                        `chmod +x ${entrypoint}`,
-                        `./${entrypoint}`
-                    ]
-                }
-            }
-        });
     }
 }
 
